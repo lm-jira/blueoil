@@ -26,13 +26,13 @@ class Tensor {
 private:
   std::vector<int> m_shape;
   std::vector<float> m_data;
-  int shapeVolume();
 public:
   Tensor(std::vector<int> shape);
   Tensor(std::vector<int> shape, std::vector<float> data);
   Tensor(std::vector<int> shape, float *data);
   Tensor(const Tensor &tensor);
   std::vector<int> shape() const;
+  int size() const;
   std::vector<float> & data();
   const float *dataAsArray() const;
   const float *dataAsArray(std::vector<int> indices) const;

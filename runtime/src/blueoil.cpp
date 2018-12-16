@@ -42,7 +42,7 @@ Tensor::Tensor(const Tensor &tensor)
       m_data(tensor.m_data) {
 }
 
-int Tensor::shapeVolume() {
+int Tensor::size() const {
     return calcVolume(m_shape);
 }
 
