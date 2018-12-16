@@ -1,3 +1,4 @@
+#include <cmath>
 #include <dlfcn.h>
 #include <string>
 #include <vector>
@@ -29,6 +30,25 @@ Tensor DivideBy255(const Tensor& image) {
   return out;
 }
 
+Tensor PerImageStandardization(const Tensor& image) {
+  Tensor out(image);
+
+  double sum = 0.0;
+  double sum2 = 0.0;
+
+  for (auto it : image) {
+    sum += it;
+    sum2 += it * it;
+  }
+
+  float mean = sum / image.size();
+  float var = sum2 / image.size() - mean * mean;
+  double sd = std::sqrt(var);
+  float adjusted_sd = std::max(sd, 1.0 / std::sqrt(image.size()));
+  auto standardization = [mean, adjusted_sd](float i) { return (i - mean) / adjusted_sd; };
+  std::transform(image.begin(), image.end(), out.begin(), standardization);
+  return out;
+}
 
 // TODO(wakisaka): impl
 Tensor FormatYoloV2(const Tensor& input,
