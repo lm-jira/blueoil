@@ -7,6 +7,9 @@ SRC_DIR := ./src
 MAINS_DIR := ./mains
 INPUTS_SRC_DIR := ./src/inputs
 DLK_TEST_SRC_DIR := ./src/test_data
+RUNTIME_DIR := ../../../../../../runtime
+RUNTIME_SRC_DIR := $(RUNTIME_DIR)/src
+RUNTIME_INCLUDE_DIR := $(RUNTIME_DIR)/include
 
 LIB_SRC := $(wildcard $(INPUTS_SRC_DIR)/*.cpp) \
 {%- if config.activate_hard_quantization %}
@@ -39,7 +42,10 @@ LIB_SRC := $(wildcard $(INPUTS_SRC_DIR)/*.cpp) \
     $(SRC_DIR)/network_c_interface.cpp \
     $(SRC_DIR)/network.cpp \
     $(SRC_DIR)/pack_input_to_qwords.cpp \
-    $(SRC_DIR)/time_measurement.cpp
+    $(SRC_DIR)/time_measurement.cpp \
+    $(wildcard $(RUNTIME_SRC_DIR)/*.cpp) \
+    $(wildcard $(RUNTIME_DIR)/yaml-cpp/src/*.cpp) \
+    $(wildcard $(RUNTIME_DIR)/yaml-cpp/src/contrib/*.cpp)
 
 SRC := $(LIB_SRC) $(wildcard $(DLK_TEST_SRC_DIR)/*.cpp) mains/main.cpp
 SRC := $(filter-out ./src/network_c_interface.cpp, $(SRC))
@@ -80,7 +86,7 @@ LIB_JS_OBJ := $(patsubst %.cpp, %.o, $(LIB_JS_SRC))
 LIB_OBJ := $(patsubst %.cpp, %.o, $(LIB_SRC))
 OBJ := $(patsubst %.cpp, %.o, $(SRC))
 
-INCLUDES := -I./include
+INCLUDES := -I./include -I$(RUNTIME_INCLUDE_DIR) -I$(RUNTIME_DIR)/yaml-cpp/include
 HLS_INCLUDE := -I./hls/include
 
 
