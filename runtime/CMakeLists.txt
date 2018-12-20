@@ -48,7 +48,7 @@ if(VERBOSE)
 endif()
 
 
-find_package( OpenCV REQUIRED )
+find_package(OpenCV)
 include_directories(include yaml-cpp/include ${OpenCV_INCLUDE_DIRS})
 
 

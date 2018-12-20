@@ -1,5 +1,7 @@
 #include <cassert>
 
+#ifdef OPENCV_FOUND
+
 #include "blueoil.hpp"
 #include "blueoil_image.hpp"
 #include "blueoil_opencv.hpp"
@@ -65,6 +67,7 @@ cv::Mat Tensor_toCVMat(Tensor &tensor) {
     return img;
 }
 
-
 }  // namespace opencv
 }  // namespace blueoil
+
+#endif //OPENCV_FOUND
