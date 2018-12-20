@@ -48,7 +48,8 @@ if(VERBOSE)
 endif()
 
 
-include_directories(include yaml-cpp/include)
+find_package( OpenCV REQUIRED )
+include_directories(include yaml-cpp/include ${OpenCV_INCLUDE_DIRS})
 
 
 # Add dlk static lib.
@@ -106,4 +107,10 @@ else()
   install(FILES ${DCORE_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
   install(FILES ${PUBLIC_HEADERS} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
+endif()
+
+# CTest
+if(DCORE_BUILD_SHARED_LIBS)
+  enable_testing()
+  add_subdirectory(test)
 endif()

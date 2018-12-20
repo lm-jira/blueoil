@@ -1,6 +1,5 @@
-/* Copyright 2018 Leapmind Inc. */
-#ifndef RUNTIME_INCLUDE_DCORE_DATA_PROCESSOR_HPP_
-#define RUNTIME_INCLUDE_DCORE_DATA_PROCESSOR_HPP_
+#ifndef RUNTIME_INCLUDE_BLUEOIL_DATA_PROCESSOR_HPP_
+#define RUNTIME_INCLUDE_BLUEOIL_DATA_PROCESSOR_HPP_
 
 
 #include <string>
@@ -19,6 +18,8 @@ namespace data_processor {
 Tensor Resize(const Tensor& image, const std::pair<int, int>& size);
 
 Tensor DivideBy255(const Tensor& image);
+
+Tensor PerImageStandardization(const Tensor& image);
 
 // post process.
 
@@ -64,10 +65,10 @@ Tensor NMS(const Tensor& input,
 namespace YAML {
 
 template<>
-struct convert<blueoil::data_processor::FormatYoloV2Parameters>{
+struct convert<blueoil::data_processor::FormatYoloV2Parameters> {
   static Node encode(const blueoil::data_processor::FormatYoloV2Parameters& params);
   static bool decode(const Node& node,
-                     blueoil::data_processor::FormatYoloV2Parameters& params) {  // NOLINT 
+                     blueoil::data_processor::FormatYoloV2Parameters& params) {  // NOLINT
     params.anchors = node["anchors"].as<std::vector<std::pair<float, float>>>();
     params.boxes_per_cell = node["boxes_per_cell"].as<int>();
     params.data_format = node["data_format"].as<std::string>();
@@ -79,12 +80,12 @@ struct convert<blueoil::data_processor::FormatYoloV2Parameters>{
 };
 
 template<>
-struct convert<blueoil::data_processor::NMSParameters>{
+struct convert<blueoil::data_processor::NMSParameters> {
   static Node encode(const blueoil::data_processor::NMSParameters& params);
   static bool decode(const Node& node,
-                     blueoil::data_processor::NMSParameters& params) {  // NOLINT 
+                     blueoil::data_processor::NMSParameters& params) {  // NOLINT
     params.classes = node["classes"].as<std::vector<std::string>>();
-    params.iou_threshold = node["iou_threshold"].as<int>();
+    params.iou_threshold = node["iou_threshold"].as<float>();
     params.max_output_size = node["max_output_size"].as<int>();
     params.per_class = node["per_class"].as<bool>();
 
@@ -94,4 +95,4 @@ struct convert<blueoil::data_processor::NMSParameters>{
 }  // namespace YAML
 
 
-#endif  // RUNTIME_INCLUDE_DCORE_DATA_PROCESSOR_HPP_
+#endif  // RUNTIME_INCLUDE_BLUEOIL_DATA_PROCESSOR_HPP_
