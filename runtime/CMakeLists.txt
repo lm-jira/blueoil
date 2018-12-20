@@ -62,7 +62,7 @@ endif()
 message(STATUS "dlk dir: ${DLK_LIB_DIR}")
 
 # TODO(wakisaka): Enable to set path, target environment.
-set_target_properties(dlk PROPERTIES IMPORTED_LOCATION ${DLK_LIB_DIR}/libdlk_x86.a)
+#set_target_properties(dlk PROPERTIES IMPORTED_LOCATION ${DLK_LIB_DIR}/libdlk_x86.a)
 
 
 if(DCORE_BUILD_SHARED_LIBS)
@@ -78,7 +78,7 @@ if(DCORE_BUILD_SHARED_LIBS)
 	SOVERSION "${DCORE_VERSION_MAJOR}.${DCORE_VERSION_MINOR}.${DCORE_VERSION_PATCH}"
     PUBLIC_HEADER ${PUBLIC_HEADERS}
     )
-  target_link_libraries(blueoil dlk yaml-cpp)
+  target_link_libraries(blueoil yaml-cpp)
 
   install(TARGETS blueoil
     LIBRARY DESTINATION lib
@@ -95,12 +95,11 @@ else()
     COMMAND mkdir ${COMBINED_OBJECT}
     COMMAND cd ${COMBINED_OBJECT} && ar -x $<TARGET_FILE:yaml-cpp>
     COMMAND cd ${COMBINED_OBJECT} && ar -x $<TARGET_FILE:tmp>
-    COMMAND cd ${COMBINED_OBJECT} && ar -x $<TARGET_FILE:dlk>
     COMMAND ar -qcs ${DCORE_LIB} ${COMBINED_OBJECT}/*.o
     COMMAND rm -rf ${COMBINED_OBJECT}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    DEPENDS yaml-cpp tmp dlk
-    COMMENT "Create ${DCORE_LIB} with combining static libs yaml-cpp, tmp. dlk."
+    DEPENDS yaml-cpp tmp
+    COMMENT "Create ${DCORE_LIB} with combining static libs yaml-cpp, tmp."
     )
 
 
