@@ -28,12 +28,13 @@ private:
   std::vector<float> m_data;
 public:
   Tensor(std::vector<int> shape);
-  Tensor(std::vector<int> shape, std::vector<float> data);
-  Tensor(std::vector<int> shape, float *data);
+  Tensor(std::vector<int> shape, std::vector<float>& data);
+  Tensor(std::vector<int> shape, const float* data);
   Tensor(const Tensor &tensor);
   std::vector<int> shape() const;
+  void reshape(const std::vector<int>& new_shape);
   int size() const;
-  std::vector<float> & data();
+  float* data();
   const float *dataAsArray() const;
   const float *dataAsArray(std::vector<int> indices) const;
   float *dataAsArray();
@@ -60,10 +61,12 @@ class Predictor {
   std::vector<std::string> classes;
   std::vector<int> expected_input_shape;
 
-  Tensor Run(const Tensor& image);
+  Tensor Run(const Tensor* image);
+  void Configure(const std::string& yaml);
 
   // constructor
   explicit Predictor(const std::string& meta_yaml_path);
+  explicit Predictor();
 
 
  private:
@@ -90,6 +93,13 @@ struct Box {
   float y;  // top
   float w;
   float h;
+
+  Box() {}
+
+  Box(float x_, float y_, float w_, float h_):
+    x(x_), y(y_), w(w_), h(h_) {
+  }
+
 };
 
 struct DetectedBox:Box {

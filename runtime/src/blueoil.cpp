@@ -4,9 +4,17 @@
 #include <iostream>
 #include <numeric>
 #include <algorithm>
+#include <cassert>
 #include <cstdio>
 #include <cstring>
 #include <cmath>
+
+#ifdef __EMSCRIPTEN__
+  #include <emscripten.h>
+  #include <emscripten/bind.h>
+#else
+  #define EMSCRIPTEN_KEEPALIVE
+#endif
 
 #include "blueoil.hpp"
 #include "blueoil_data_processor.hpp"
@@ -26,15 +34,16 @@ Tensor::Tensor(std::vector<int> shape)
       m_data(std::vector<float>(calcVolume(std::move(shape)), 0)) {
 }
 
-Tensor::Tensor(std::vector<int> shape, std::vector<float> data)
+
+Tensor::Tensor(std::vector<int> shape, std::vector<float>& data)
     : m_shape(std::move(shape)),
       m_data(std::move(data)) {
 }
 
-Tensor::Tensor(std::vector<int> shape, float *arr)
+Tensor::Tensor(std::vector<int> shape, const float* data)
     : m_shape(shape),
-      m_data(std::vector<float>(arr,
-                                arr + calcVolume(std::move(shape)))) {
+      m_data(std::vector<float>(data,
+                                data + calcVolume(shape))) {
 }
 
 Tensor::Tensor(const Tensor &tensor)
@@ -50,8 +59,14 @@ std::vector<int> Tensor::shape() const {
     return m_shape;
 }
 
-std::vector<float> &Tensor::data() {
-  return m_data;
+void Tensor::reshape(const std::vector<int>& new_shape) {
+  assert(calcVolume(m_shape) == calcVolume(new_shape));
+
+  m_shape = new_shape;
+}
+
+float* Tensor::data() {
+  return &m_data[0];
 }
 
 const float *Tensor::dataAsArray() const {
@@ -286,6 +301,10 @@ void Predictor::SetupNetwork() {
 }
 
 
+Predictor::Predictor() {
+  SetupNetwork();
+}
+
 Predictor::Predictor(const std::string& meta_yaml_path) {
   SetupNetwork();
   SetupMeta(meta_yaml_path);
@@ -309,6 +328,20 @@ void Predictor::SetupMeta(const std::string& meta_yaml_path) {
   MappingProcess(post_processor_node, &post_process_);
 }
 
+void Predictor::Configure(const std::string& yaml) {
+  YAML::Node meta = YAML::Load(yaml.c_str());
+
+  task = meta["TASK"].as<std::string>();
+
+  std::vector<int> image_size_ = meta["IMAGE_SIZE"].as<std::vector<int>>();
+
+  classes = meta["CLASSES"].as<std::vector<std::string>>();
+
+  YAML::Node pre_processor_node = meta["PRE_PROCESSOR"];
+  MappingProcess(pre_processor_node, &pre_process_);
+  YAML::Node post_processor_node = meta["POST_PROCESSOR"];
+  MappingProcess(post_processor_node, &post_process_);
+}
 
 Tensor Predictor::RunPreProcess(const Tensor& input) {
   Tensor tmp = input;
@@ -328,9 +361,12 @@ Tensor Predictor::RunPostProcess(const Tensor& input) {
   return tmp;
 }
 
-Tensor Predictor::Run(const Tensor& image) {
-  Tensor pre_processed = RunPreProcess(image);
-
+Tensor Predictor::Run(const Tensor* image) {
+  Tensor img = *image;
+  std::vector<int> shape = img.shape();
+  shape.erase(shape.begin());
+  img.reshape(shape);
+  Tensor pre_processed = RunPreProcess(img);
   // build network output tensor.
   Tensor n_output(network_output_shape_);
 
@@ -348,4 +384,76 @@ namespace box_util {
 std::vector<DetectedBox> FormatDetectedBox(const blueoil::Tensor& output_tensor);
 }  // namespace box_util
 
+
 }  // namespace blueoil
+
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" __attribute__ ((visibility ("default"))) blueoil::Tensor* tensor_create(int rank, const int* shape, const float* data)
+{
+  std::vector<int> shape_;
+  for (int i = 0; i < rank; i++) {
+    shape_.push_back(shape[i]);
+  }
+
+  return new blueoil::Tensor(shape_, data);
+}
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" __attribute__ ((visibility ("default"))) blueoil::Tensor* tensor_delete(blueoil::Tensor *t)
+{
+  delete t;
+}
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" __attribute__ ((visibility ("default"))) void tensor_data(blueoil::Tensor* t, float* data)
+{
+  int size = blueoil::calcVolume(t->shape());
+  for (int i = 0; i < size; i++) {
+    data[i] = t->data()[i];
+  }
+}
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" __attribute__ ((visibility ("default"))) int tensor_get_rank(blueoil::Tensor* t)
+{
+  return t->shape().size();
+}
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" __attribute__ ((visibility ("default"))) void tensor_get_shape(blueoil::Tensor* t, int* shape)
+{
+  int rank = t->shape().size();
+  std::vector<int> tensor_shape = t->shape();
+  for (int i = 0; i < rank; i++) {
+    shape[i] = tensor_shape[i];
+  }
+}
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" __attribute__ ((visibility ("default"))) blueoil::Predictor* predictor_create()
+{
+  return new blueoil::Predictor();
+}
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" __attribute__ ((visibility ("default"))) blueoil::Predictor* predictor_delete(blueoil::Predictor* predictor)
+{
+  delete predictor;
+}
+
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" __attribute__ ((visibility ("default"))) void predictor_configure(blueoil::Predictor* predictor, const char* config)
+{
+  predictor->Configure(config);
+}
+
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" __attribute__ ((visibility ("default"))) blueoil::Tensor* predictor_run(blueoil::Predictor* predictor, const blueoil::Tensor* t)
+{
+  blueoil::Tensor output = predictor->Run(t);
+  blueoil::Tensor* r = new blueoil::Tensor(output.shape(), output.data());
+  return r;
+}

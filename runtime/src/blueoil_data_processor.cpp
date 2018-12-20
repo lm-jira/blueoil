@@ -42,6 +42,32 @@ static float sigmoid(float x) {
   }
 }
 
+static float CalcIoU(const box_util::Box& a, const box_util::Box& b) {
+  float left = std::max(a.x, b.x);
+  float top = std::max(a.y, b.y);
+
+  float right = std::min(a.x + a.w, b.x + b.w);
+  float bottom = std::min(a.y + a.h, b.y + b.h);
+
+  float inner_area = (right - left) * (top - bottom);
+  float a_area = a.w * a.h;
+  float b_area = b.w * b.h;
+
+  float epsilon = 1e-10;
+
+  float r = inner_area / (a_area + b_area - inner_area + epsilon);
+
+  if (std::isnan(r)) {
+    return 0.0;
+  }
+  if (r > 1.0) {
+    return 1.0;
+  } else if (r < 0.0) {
+    return 0.0;
+  }
+  return r;
+}
+
 static box_util::Box ConvertBboxCoordinate(float x, float y, float w, float h, float k,
                                            const std::pair<float, float>& anchor,
                                            int nth_y, int nth_x,
@@ -122,9 +148,9 @@ Tensor FormatYoloV2(const Tensor& input,
   std::vector<int> output_shape = {1, num_cell_y * num_cell_x * boxes_per_cell * num_classes, 6};
   Tensor result(output_shape);
 
-  size_t r_i = 0;
-  for (size_t i = 0; i < num_cell_y; i++) {
-    for (size_t j = 0; j < num_cell_x; j++) {
+  int r_i = 0;
+  for (int i = 0; i < num_cell_y; i++) {
+    for (int j = 0; j < num_cell_x; j++) {
       const float* predictions = input.dataAsArray({0, i, j, 0});
       for (size_t k = 0; k < anchors.size(); k++) {
         // is it ok to use softmax when num_classes == 1?
@@ -173,26 +199,82 @@ Tensor ExcludeLowScoreBox(const Tensor& input, const float& threshold) {
   auto shape = input.shape();
   int num_predictions = shape[1];
 
-  for (size_t i = 0; i < num_predictions; i++) {
+  for (int i = 0; i < num_predictions; i++) {
     float* predictions = result.dataAsArray({0, i, 0});
     float score = predictions[5];
     if (score < threshold) {
-      predictions[5] = 0.0;
+      predictions[5] = -1.0;
     }
   }
 
   return result;
 }
-// TODO(wakisaka): impl
+
 Tensor NMS(const Tensor& input,
            const std::vector<std::string>& classes,
            const float& iou_threshold,
            const int& max_output_size,
            const bool& per_class) {
-  Tensor t(input);
+  auto shape = input.shape();
+  int num_predictions = shape[1];
 
-  return t;
+  std::vector<int> ids;
+  for (int i = 0; i < num_predictions; i++) {
+    ids.push_back(i);
+  }
+
+  std::sort(ids.begin(), ids.end(),
+            [input](const int& a, const int& b) -> bool
+            {
+              const float* prediction_a = input.dataAsArray({0, a, 0});
+              float score_a = prediction_a[5];
+              const float* prediction_b = input.dataAsArray({0, b, 0});
+              float score_b = prediction_b[5];
+              return score_a > score_b;
+            });
+
+  Tensor tmp(input);
+
+  for (int i = 0; i < num_predictions; i++) {
+    float* prediction_a = tmp.dataAsArray({0, ids[i], 0});
+    float score = prediction_a[5];
+    if (score < 0.0) {
+      break;
+    } else if (score == 0.0) {
+      continue;
+    }
+    box_util::Box box_a = box_util::Box(prediction_a[0], prediction_a[1], prediction_a[2], prediction_a[3]);
+
+    for (int j = i+1; j < num_predictions; j++) {
+      float* prediction_b = tmp.dataAsArray({0, ids[j], 0});
+      box_util::Box box_b = box_util::Box(prediction_b[0], prediction_b[1], prediction_b[2], prediction_b[3]);
+      float iou = CalcIoU(box_a, box_b);
+
+      if (iou > iou_threshold) {
+        prediction_b[5] = 0.0;
+      }
+    }
+  }
+
+  Tensor result(input.shape());
+  int j = 0;
+  for (int i = 0; i < num_predictions; i++) {
+    float* prediction = tmp.dataAsArray({0, ids[i], 0});
+    float score = prediction[5];
+    if (score > 0.0) {
+      float* store_location = result.dataAsArray({0, j, 0});
+      store_location[0] = prediction[0];
+      store_location[1] = prediction[1];
+      store_location[2] = prediction[2];
+      store_location[3] = prediction[3];
+      store_location[4] = prediction[4];
+      store_location[5] = prediction[5];
+      j++;
+    }
+  }
+  return result;
 }
+
 // TODO(wakisaka): optimize
 Tensor NMS(const Tensor& input, const NMSParameters& params){
   return NMS(input,
