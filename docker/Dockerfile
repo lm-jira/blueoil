@@ -1,4 +1,4 @@
-FROM nvidia/cuda:8.0-cudnn6-devel
+FROM  ubuntu:16.04
 
 MAINTAINER masuda@leapmind.io
 
@@ -92,7 +92,7 @@ COPY lmnet /home/blueoil/lmnet
 WORKDIR /home/blueoil/lmnet
 
 # Install requirements
-RUN pip install -r gpu.requirements.txt
+RUN pip install -r cpu.requirements.txt
 # In order to install blueoil requirements `prompt_toolkit==1.0.15`, uninstall prompt-toolkit v2.0 that depends on `pdb==0.10.2`.
 RUN pip uninstall -y prompt-toolkit
 

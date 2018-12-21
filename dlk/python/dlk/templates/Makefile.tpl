@@ -108,6 +108,8 @@ LIBS_FPGA    := lib_fpga
 
 LIBS_JS     := lib_js
 
+LIBS_WEB     := lib_web
+
 ARS_X86     := ar_x86
 
 ARS_AARCH64 := ar_aarch64
@@ -177,6 +179,9 @@ lib_fpga:          CXXFLAGS +=
 lib_js:            CXX = em++
 lib_js:            FLAGS += $(INCLUDES) -O3 -std=c++0x -fPIC -fvisibility=hidden -pthread -g -s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]' -s ASSERTIONS=2 -s ENVIRONMENT=node -s DISABLE_EXCEPTION_CATCHING=0 -s -s TOTAL_MEMORY=50MB
 
+lib_web:           CXX = em++
+lib_web:           FLAGS += $(INCLUDES) -O3 -std=c++0x -fPIC -fvisibility=hidden -pthread -g -s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]' -s ASSERTIONS=2 -s ENVIRONMENT=web -s DISABLE_EXCEPTION_CATCHING=0 -s -s TOTAL_MEMORY=50MB
+
 ar_x86:           AR = ar
 ar_x86:           CXX = g++
 ar_x86:           FLAGS += $(INCLUDES) -O3 -std=c++0x -fPIC -fvisibility=hidden -pthread -g
@@ -228,6 +233,9 @@ $(LIBS_FPGA): $(LIB_OBJ) $(TVM_OBJ) $(LIB_FPGA_OBJ)
 
 $(LIBS_JS): $(LIB_OBJ) $(LIB_JS_OBJ)
 	$(CXX) $(FLAGS) $(LIB_OBJ) $(LIB_JS_OBJ) -o $@.bc $(CXXFLAGS) -shared -ldl && $(CXX) $(FLAGS) lib_js.bc -o lib_js.js
+
+$(LIBS_WEB): $(LIB_OBJ) $(LIB_JS_OBJ)
+	$(CXX) $(FLAGS) $(LIB_OBJ) $(LIB_JS_OBJ) -o $@.bc $(CXXFLAGS) -shared -ldl && $(CXX) $(FLAGS) lib_web.bc -o lib_web.js
 
 $(ARS_X86): $(LIB_OBJ) $(TVM_OBJ) $(LIB_X86_OBJ)
 	$(AR) $(LDFLAGS) libdlk_$(NAME).a $(LIB_OBJ) $(TVM_OBJ) $(TVM_X86_LIBS) $(LIB_X86_OBJ)
