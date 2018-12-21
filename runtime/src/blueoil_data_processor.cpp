@@ -18,16 +18,16 @@ static std::vector<float> softmax(const float* xs, int num) {
   std::vector<float> r(num);
 
   float max_val = 0.0;
-  for (size_t i = 0; i < num; i++) {
+  for (int i = 0; i < num; i++) {
     max_val = std::max(xs[i], max_val);
   }
 
   float exp_sum = 0.0;
-  for (size_t i = 0; i < num; i++) {
+  for (int i = 0; i < num; i++) {
     exp_sum = exp(xs[i] - max_val);
   }
 
-  for (size_t i = 0; i < num; i++) {
+  for (int i = 0; i < num; i++) {
     r[i] = exp(xs[i] - max_val) / exp_sum;
   }
 
@@ -163,7 +163,7 @@ Tensor FormatYoloV2(const Tensor& input,
 
         box_util::Box bbox_im = ConvertBboxCoordinate(x, y, w, h, k, anchors[k], i, j, num_cell_y, num_cell_x);
 
-        for (size_t c_i = 0; c_i < num_classes; c_i++) {
+        for (int c_i = 0; c_i < num_classes; c_i++) {
           float prob = probs[c_i];
           float score = prob * conf;
           auto p = result.dataAsArray({0, r_i, 0});
