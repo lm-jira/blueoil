@@ -75,8 +75,8 @@ static box_util::Box ConvertBboxCoordinate(float x, float y, float w, float h, f
   float anchor_w = anchor.first;
   float anchor_h = anchor.second;
 
-  float cy = y + static_cast<float>(nth_y) / num_cell_y;
-  float cx = x + static_cast<float>(nth_x) / num_cell_x;
+  float cy = (y + static_cast<float>(nth_y)) / num_cell_y;
+  float cx = (x + static_cast<float>(nth_x)) / num_cell_x;
 
   r.h = exp(h) * static_cast<float>(anchor_h) / num_cell_y;
   r.w = exp(w) * static_cast<float>(anchor_w) / num_cell_x;
