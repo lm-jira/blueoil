@@ -402,7 +402,7 @@ extern "C" __attribute__ ((visibility ("default"))) blueoil::Tensor* tensor_crea
 }
 
 EMSCRIPTEN_KEEPALIVE
-extern "C" __attribute__ ((visibility ("default"))) blueoil::Tensor* tensor_delete(blueoil::Tensor *t)
+extern "C" __attribute__ ((visibility ("default"))) void tensor_delete(blueoil::Tensor *t)
 {
   delete t;
 }
@@ -439,7 +439,7 @@ extern "C" __attribute__ ((visibility ("default"))) blueoil::Predictor* predicto
 }
 
 EMSCRIPTEN_KEEPALIVE
-extern "C" __attribute__ ((visibility ("default"))) blueoil::Predictor* predictor_delete(blueoil::Predictor* predictor)
+extern "C" __attribute__ ((visibility ("default"))) void predictor_delete(blueoil::Predictor* predictor)
 {
   delete predictor;
 }
