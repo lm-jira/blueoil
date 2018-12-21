@@ -189,7 +189,6 @@ function tensor_data(t) {
 
 function tensor_dump(t) {
     shape = tensor_get_shape(t);
-    console.log("shape:", shape);
     var data = tensor_data(t);
 
     for (var i = 0; i < shape[1]; i++) {
@@ -199,37 +198,5 @@ function tensor_dump(t) {
         var h = data[i*shape[2]+3];
         var class_ = data[i*shape[2]+4];
         var score = data[i*shape[2]+5];
-//        console.log(x,y,w,h,class_,score);
     }
 }
-
-// // main function, read from here
-// Module['onRuntimeInitialized'] = onRuntimeInitialized;
-// function onRuntimeInitialized() {
-//     var nn = init();
-//     var input_size = 1;
-//     var input_shape = nn_get_input_shape(nn);
-//     for (var i = 0; i < input_shape.length; i++) {
-//         input_size *= input_shape[i];
-//     }
-
-//     var input = new Float32Array(input_size);
-//     // expects RGBRGBRGB...
-//     for (var i = 0; i < input_size; i++) {
-//         var r = Math.random();
-//         input[i] = r;
-//     }
-
-//     var t = tensor_create(input_shape, input);
-//     var predictor = predictor_create();
-
-//     var start = Date.now();
-//     var trial = 100;
-//     for (var i = 0; i < trial; i++) {
-//         var r = predictor_run(predictor, t);
-// //        tensor_dump(r);
-//     }
-//     var end = Date.now();
-
-//     console.log((end - start)/trial, "ms on average");
-// }
