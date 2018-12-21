@@ -44,15 +44,14 @@ static float sigmoid(float x) {
 
 static float CalcIoU(const box_util::Box& a, const box_util::Box& b) {
   float left = std::max(a.x, b.x);
-  float top = std::max(a.y, b.y);
+  float top = std::min(a.y+a.h, b.y + b.h);
 
   float right = std::min(a.x + a.w, b.x + b.w);
-  float bottom = std::min(a.y + a.h, b.y + b.h);
+  float bottom = std::max(a.y, b.y);
 
-  float inner_area = (right - left) * (top - bottom);
+  float inner_area = std::max(right - left, 0.f) * std::max(top - bottom, 0.f);
   float a_area = a.w * a.h;
   float b_area = b.w * b.h;
-
   float epsilon = 1e-10;
 
   float r = inner_area / (a_area + b_area - inner_area + epsilon);
