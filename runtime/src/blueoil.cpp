@@ -66,7 +66,7 @@ void Tensor::reshape(const std::vector<int>& new_shape) {
 }
 
 float* Tensor::data() {
-  return &m_data[0];
+  return m_data.data();
 }
 
 const float *Tensor::dataAsArray() const {
