@@ -47,6 +47,22 @@ _NETWORK_NAME_NETWORK_MODULE_CLASS = {
         "network_module": "lm_fyolo",
         "network_class": "LMFYoloQuantize",
     },
+    "Vgg7Network": {
+        "network_module": "vgg7",
+        "network_class": "Vgg7Network",
+    },
+    "Vgg7Quantize": {
+        "network_module": "vgg7",
+        "network_class": "Vgg7Quantize",
+    },
+    "Resnet18Network": {
+        "network_module": "resnet18",
+        "network_class": "Resnet18",
+    },
+    "Resnet18Quantize": {
+        "network_module": "resnet18",
+        "network_class": "Resnet18Quantize",
+    },
 }
 
 _DATASET_FORMAT_DATASET_MODULE_CLASS = {
@@ -65,6 +81,14 @@ _DATASET_FORMAT_DATASET_MODULE_CLASS = {
     "DeLTA-Mark for Object Detection": {
         "dataset_module": "delta_mark",
         "dataset_class": "ObjectDetectionBase",
+    },
+    "Cifar10": {
+        "dataset_module": "cifar10",
+        "dataset_class": "Cifar10",
+    },
+    "ImageNet": {
+        "dataset_module": "ilsvrc_2012",
+        "dataset_class": "Ilsvrc2012",
     },
 }
 
@@ -225,6 +249,32 @@ def _blueoil_to_lmnet(blueoil_config):
                 int((step_per_epoch * (max_epochs - 1)) * 1 / 3),
                 int((step_per_epoch * (max_epochs - 1)) * 2 / 3),
                 int(step_per_epoch * (max_epochs - 1))
+            ],
+        }
+    elif learning_rate_schedule == 'twn_vgg':
+        learning_rate_kwargs = {
+            "values": [
+                initial_learning_rate,
+                initial_learning_rate / 10,
+                initial_learning_rate / 100
+            ],
+            "boundaries": [
+                int(step_per_epoch * 80),
+                int(step_per_epoch * 120)
+            ],
+        }
+    elif learning_rate_schedule == 'twn_resnet':
+        learning_rate_kwargs = {
+            "values": [
+                initial_learning_rate,
+                initial_learning_rate / 10,
+                initial_learning_rate / 100,
+                initial_learning_rate / 1000
+            ],
+            "boundaries": [
+                int(step_per_epoch * 30),
+                int(step_per_epoch * 40),
+                int(step_per_epoch * 50)
             ],
         }
 

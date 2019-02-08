@@ -245,6 +245,8 @@ def start_training(config):
             images_placeholder: images,
             labels_placeholder: labels,
         }
+        result = sess.run([output], feed_dict=feed_dict)
+        print("output = ",result)
 
         if step * ((step + 1) % config.SUMMARISE_STEPS) == 0 and rank == 0:
             # Runtime statistics for develop.

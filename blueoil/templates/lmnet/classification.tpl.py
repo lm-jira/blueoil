@@ -31,6 +31,7 @@ from lmnet.pre_processor import (
 from lmnet.quantizations import (
     binary_mean_scaling_quantizer,
     linear_mid_tread_half_quantizer,
+    twn_weight_quantizer,
 )
 
 IS_DEBUG = False
@@ -76,7 +77,7 @@ NETWORK.LEARNING_RATE_KWARGS = {{learning_rate_kwargs}}
 NETWORK.IMAGE_SIZE = IMAGE_SIZE
 NETWORK.BATCH_SIZE = BATCH_SIZE
 NETWORK.DATA_FORMAT = DATA_FORMAT
-NETWORK.WEIGHT_DECAY_RATE = 0.0005
+NETWORK.WEIGHT_DECAY_RATE = 0.0001
 
 # quantize
 NETWORK.ACTIVATION_QUANTIZER = linear_mid_tread_half_quantizer
@@ -84,7 +85,7 @@ NETWORK.ACTIVATION_QUANTIZER_KWARGS = {
     'bit': 2,
     'max_value': 2
 }
-NETWORK.WEIGHT_QUANTIZER = binary_mean_scaling_quantizer
+NETWORK.WEIGHT_QUANTIZER = twn_weight_quantizer
 NETWORK.WEIGHT_QUANTIZER_KWARGS = {}
 
 # dataset
