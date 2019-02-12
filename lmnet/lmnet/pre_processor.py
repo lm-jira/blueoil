@@ -298,6 +298,17 @@ class DivideBy255(Processor):
         return dict({'image': image}, **kwargs)
 
 
+class DivideBy128(Processor):
+    """Divide image by 128 before minus 1.
+       Standardize pixel val to the range [-1,-1)
+    """
+
+    def __call__(self, image, **kwargs):
+        image = image / 128.0
+        image -= 1
+        return dict({'image': image}, **kwargs)
+
+
 # TODO(wakisaka): test.
 class LetterBoxes(Processor):
     """Darknet's letter boxes"""

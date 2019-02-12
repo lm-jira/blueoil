@@ -21,16 +21,19 @@ from lmnet.networks.classification.{{network_module}} import {{network_class}}
 from lmnet.datasets.{{dataset_module}} import {{dataset_class}}
 {% if data_augmentation %}from lmnet.data_augmentor import ({% for augmentor in data_augmentation %}
     {{ augmentor[0] }},{% endfor %}
+    PerPixelMeanSubtraction,
 ){% endif %}
 from lmnet.data_processor import Sequence
 from lmnet.pre_processor import (
     Resize,
     DivideBy255,
-    PerImageStandardization
+    PerImageStandardization,
+    DivideBy128,
 )
 from lmnet.quantizations import (
     binary_mean_scaling_quantizer,
     linear_mid_tread_half_quantizer,
+    ttq_weight_quantizer,
 )
 
 IS_DEBUG = False
@@ -61,8 +64,8 @@ PRETRAIN_DIR = ""
 PRETRAIN_FILE = ""
 
 PRE_PROCESSOR = Sequence([
-    Resize(size=IMAGE_SIZE),
-    {% if quantize_first_convolution %}DivideBy255(){% else %}PerImageStandardization(){% endif %}
+    DivideBy128(),
+    #Resize(size=IMAGE_SIZE),
 ])
 POST_PROCESSOR = None
 
@@ -76,7 +79,7 @@ NETWORK.LEARNING_RATE_KWARGS = {{learning_rate_kwargs}}
 NETWORK.IMAGE_SIZE = IMAGE_SIZE
 NETWORK.BATCH_SIZE = BATCH_SIZE
 NETWORK.DATA_FORMAT = DATA_FORMAT
-NETWORK.WEIGHT_DECAY_RATE = 0.0005
+NETWORK.WEIGHT_DECAY_RATE = 0.0002
 
 # quantize
 NETWORK.ACTIVATION_QUANTIZER = linear_mid_tread_half_quantizer
@@ -84,15 +87,17 @@ NETWORK.ACTIVATION_QUANTIZER_KWARGS = {
     'bit': 2,
     'max_value': 2
 }
-NETWORK.WEIGHT_QUANTIZER = binary_mean_scaling_quantizer
+NETWORK.WEIGHT_QUANTIZER = ttq_weight_quantizer
 NETWORK.WEIGHT_QUANTIZER_KWARGS = {}
+NETWORK.QUANTIZE_FIRST_CONVOLUTION = False
+NETWORK.QUANTIZE_LAST_CONVOLUTION = False
 
 # dataset
 DATASET = EasyDict()
 DATASET.BATCH_SIZE = BATCH_SIZE
 DATASET.DATA_FORMAT = DATA_FORMAT
 DATASET.PRE_PROCESSOR = PRE_PROCESSOR
-DATASET.AUGMENTOR = Sequence([{% if data_augmentation %}{% for augmentor in data_augmentation %}
+DATASET.AUGMENTOR = Sequence([{% if data_augmentation %}PerPixelMeanSubtraction(),{% for augmentor in data_augmentation %}
     {{ augmentor[0] }}({% for d_name, d_value in augmentor[1] %}{{ d_name }}={{ d_value }}, {% endfor %}),{% endfor %}
 {% endif %}])
 

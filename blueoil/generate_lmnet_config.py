@@ -47,6 +47,14 @@ _NETWORK_NAME_NETWORK_MODULE_CLASS = {
         "network_module": "lm_fyolo",
         "network_class": "LMFYoloQuantize",
     },
+    "Resnet20Network": {
+        "network_module": "resnet20",
+        "network_class": "Resnet20",
+    },
+    "Resnet20Quantize": {
+        "network_module": "resnet20",
+        "network_class": "Resnet20Quantize",
+    },
 }
 
 _DATASET_FORMAT_DATASET_MODULE_CLASS = {
@@ -65,6 +73,14 @@ _DATASET_FORMAT_DATASET_MODULE_CLASS = {
     "DeLTA-Mark for Object Detection": {
         "dataset_module": "delta_mark",
         "dataset_class": "ObjectDetectionBase",
+    },
+    "Cifar10": {
+        "dataset_module": "cifar10",
+        "dataset_class": "Cifar10",
+    },
+    "ImageNet": {
+        "dataset_module": "ilsvrc_2012",
+        "dataset_class": "Ilsvrc2012",
     },
 }
 
@@ -208,7 +224,6 @@ def _blueoil_to_lmnet(blueoil_config):
                 int(step_per_epoch * (max_epochs - 1))
             ],
         }
-
     elif learning_rate_schedule == "3-step-decay-with-warmup":
         if max_epochs < 4:
             raise ValueError("epoch number must be >= 4, when 3-step-decay-with-warmup is selected.")
@@ -226,6 +241,19 @@ def _blueoil_to_lmnet(blueoil_config):
                 int((step_per_epoch * (max_epochs - 1)) * 2 / 3),
                 int(step_per_epoch * (max_epochs - 1))
             ],
+        }
+    elif learning_rate_schedule == "ttq_resnet":
+        learning_rate_kwargs = {
+            "values": [
+                initial_learning_rate,
+                initial_learning_rate / 10,
+                initial_learning_rate / 100,
+                initial_learning_rate / 1000
+            ],
+            "boundaries": [
+                int(step_per_epoch * 80),
+                int(step_per_epoch * 120),
+                int(step_per_epoch * 300) ],
         }
 
     # common
