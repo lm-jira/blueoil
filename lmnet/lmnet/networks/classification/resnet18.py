@@ -87,7 +87,7 @@ class Resnet18(Base):
 
             with tf.variable_scope("sub_add"):
                 if in_filters != out_filters:
-                    inputs = tf.nn_avg_pool(
+                    inputs = tf.nn.avg_pool(
                         inputs,
                         ksize=[1, strides, strides, 1],
                         strides=[1, strides, strides, 1],

@@ -25,8 +25,6 @@ from lmnet.datasets.{{dataset_module}} import {{dataset_class}}
 from lmnet.data_processor import Sequence
 from lmnet.pre_processor import (
     Resize,
-    DivideBy255,
-    PerImageStandardization
 )
 from lmnet.quantizations import (
     binary_mean_scaling_quantizer,
@@ -63,7 +61,6 @@ PRETRAIN_FILE = ""
 
 PRE_PROCESSOR = Sequence([
     Resize(size=IMAGE_SIZE),
-    {% if quantize_first_convolution %}DivideBy255(){% else %}PerImageStandardization(){% endif %}
 ])
 POST_PROCESSOR = None
 
