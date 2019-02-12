@@ -188,8 +188,9 @@ class Resnet18(Base):
 
         cross_entropy_mean = tf.reduce_mean(cross_entropy, name="cross_entropy_mean")
 
+        loss = cross_entropy_mean + self._decay()
         fc_regularized_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-        loss = cross_entropy_mean + self._decay() + fc_regularized_loss
+        loss += sum(fc_regularized_loss)
         tf.summary.scalar("loss", loss)
 
         return loss
