@@ -871,7 +871,8 @@ class PerPixelMeanSubtraction(data_processor.Processor):
               image: An image numpy array
         """
         image = image.astype(np.float32)
-        per_pixel_mean = image.mean(axis=0)
+        per_pixel_mean = image.mean(axis=-1)
+        per_pixel_mean = np.reshape(per_pixel_mean, [image.shape[0], image.shape[1], 1])
         image -= per_pixel_mean
         return dict({'image': image}, **kwargs)
 
