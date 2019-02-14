@@ -101,8 +101,11 @@ class Cifar10(Base):
 
         samples = {'image': image}
 
-        if callable(self.augmentor) and self.subset == "train":
-            samples = self.augmentor(**samples)
+        if callable(self.augmentor):
+            if self.subset == "train":
+                samples = self.augmentor(**samples)
+            else:
+                samples = self.augmentor(index=0, **samples)
 
         if callable(self.pre_processor):
             samples = self.pre_processor(**samples)

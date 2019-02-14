@@ -37,9 +37,12 @@ class Sequence:
     def __init__(self, processors):
         self.processors = processors
 
-    def __call__(self, **kwargs):
-        for processor in self.processors:
-            kwargs = processor(**kwargs)
+    def __call__(self, index=None, **kwargs):
+        if index:
+            kwargs = processors[index](**kwargs)
+        else:
+            for processor in self.processors:
+                kwargs = processor(**kwargs)
         return kwargs
 
     def __repr__(self):
