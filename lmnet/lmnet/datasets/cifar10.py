@@ -105,7 +105,7 @@ class Cifar10(Base):
             if self.subset == "train":
                 samples = self.augmentor(**samples)
             else:
-                samples = self.augmentor(index=0, **samples)
+                samples = self.augmentor(index=-1, **samples)
 
         if callable(self.pre_processor):
             samples = self.pre_processor(**samples)

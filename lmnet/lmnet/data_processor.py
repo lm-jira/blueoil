@@ -38,8 +38,8 @@ class Sequence:
         self.processors = processors
 
     def __call__(self, index=None, **kwargs):
-        if index:
-            kwargs = processors[index](**kwargs)
+        if index is not None:
+            kwargs = self.processors[index](**kwargs)
         else:
             for processor in self.processors:
                 kwargs = processor(**kwargs)
