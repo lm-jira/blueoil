@@ -58,6 +58,10 @@ class Cifar10(Base):
         )
         self.train_validation_saving_size = train_validation_saving_size
         self._init_images_and_labels()
+        images = np.array(self.images, dtype="float32")
+        mean = np.mean(images, axis=0)
+        mean = mean.reshape((3, 32, 32))
+        self.mean = mean.transpose([1, 2, 0])
 
     @property
     def num_per_epoch(self):
@@ -101,11 +105,13 @@ class Cifar10(Base):
 
         samples = {'image': image}
 
-        if callable(self.augmentor):
-            if self.subset == "train":
-                samples = self.augmentor(**samples)
-            else:
-                samples = self.augmentor(index=-1, **samples)
+        if callable(self.augmentor) and self.subset == "train":
+            samples = self.augmentor(**samples)
+
+        ppm = self.mean
+        images = np.array(samples['image'], dtype="float32")
+        images -= ppm
+        samples['image'] = images
 
         if callable(self.pre_processor):
             samples = self.pre_processor(**samples)
