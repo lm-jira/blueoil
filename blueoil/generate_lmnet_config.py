@@ -63,6 +63,14 @@ _NETWORK_NAME_NETWORK_MODULE_CLASS = {
         "network_module": "resnet32",
         "network_class": "Resnet32Quantize",
     },
+    "Resnet44Network": {
+        "network_module": "resnet44",
+        "network_class": "Resnet44",
+    },
+    "Resnet44Quantize": {
+        "network_module": "resnet44",
+        "network_class": "Resnet44Quantize",
+    },
 }
 
 _DATASET_FORMAT_DATASET_MODULE_CLASS = {
