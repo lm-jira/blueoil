@@ -54,58 +54,55 @@ class Resnet18(Base):
         self.num_residual = num_residual
         self.weight_decay_rate = weight_decay_rate
 
-    def _residual(self, inputs, in_filters, out_filters, strides, is_training, first=False):
-        with tf.variable_scope("sub1"):
-            if first:
-                relu1 = inputs
-            else:
-                bn1 = batch_norm("bn1", inputs, is_training=is_training)
+    def _residual(self, inputs, in_filters, out_filters, strides, is_training):
+        use_bias = False
 
-                with tf.variable_scope("relu1"):
-                    relu1 = tf.nn.relu(bn1, name="relu1")
-
+        with tf.variable_scope('sub1'):
             conv1 = conv2d(
                 "conv1",
+                inputs,
+                filters=out_filters,
+                kernel_size=3,
+                activation=None,
+                use_bias=use_bias,
+                strides=strides,
+                is_debug=self.is_debug,
+            )
+            bn1 = batch_norm("bn1", conv1, is_training=is_training)
+            with tf.variable_scope("relu1"):
+                relu1 = tf.nn.relu(bn1, name="relu1")
+
+        with tf.variable_scope("sub2"):
+            conv2 = conv2d(
+                "conv2",
                 relu1,
                 filters=out_filters,
                 kernel_size=3,
                 activation=None,
-                use_bias=False,
-                strides=strides,
-                is_debug=self.is_debug,
-            )
-
-        with tf.variable_scope("sub2"):
-            bn2 = batch_norm("bn2", conv1, is_training=is_training)
-
-            with tf.variable_scope("relu2"):
-                relu2 = tf.nn.relu(bn2, name="relu2")
-
-                conv2 = conv2d(
-                "conv2",
-                relu2,
-                filters=out_filters,
-                kernel_size=3,
-                activation=None,
-                use_bias=False,
+                use_bias=use_bias,
                 strides=1,
                 is_debug=self.is_debug,
             )
+            bn2 = batch_norm("bn2", conv2, is_training=is_training)
 
-        with tf.variable_scope("sub_add"):
-            if in_filters != out_filters:
-                inputs = tf.nn.avg_pool(
-                    inputs,
-                    ksize=[1, strides, strides, 1],
-                    strides=[1, strides, strides, 1],
-                    padding="SAME"
-                )
-                inputs = tf.pad(
-                    inputs,
-                    [[0, 0], [0, 0], [0, 0], [(out_filters - in_filters)//2, (out_filters - in_filters)//2]],
-                )
-            output = conv2 + inputs
-        return output
+            with tf.variable_scope("sub_add"):
+                if in_filters != out_filters:
+                    inputs = tf.nn.avg_pool(
+                        inputs,
+                        ksize=[1, strides, strides, 1],
+                        strides=[1, strides, strides, 1],
+                        padding='SAME'
+                    )
+                    inputs = tf.pad(
+                        inputs,
+                        [[0, 0], [0, 0], [0, 0], [(out_filters - in_filters)//2, (out_filters - in_filters)//2]]
+                    )
+
+            output = bn2 + inputs
+            with tf.variable_scope("relu2"):
+                relu2 = tf.nn.relu(output, name="relu2")
+
+        return relu2
 
     def base(self, images, is_training):
         use_bias = False
@@ -131,12 +128,8 @@ class Resnet18(Base):
             out = self.pool1
             
         for i in range(0, self.num_residual):
-            if i == 0:
-                first = True
-            else:
-                first = False
             with tf.variable_scope("unit1_{}".format(i)):
-                out = self._residual(out, in_filters=64, out_filters=64, strides=1, is_training=is_training, first=first)
+                out = self._residual(out, in_filters=64, out_filters=64, strides=1, is_training=is_training)
 
         for i in range(0, self.num_residual):
             with tf.variable_scope("unit2_{}".format(i)):
