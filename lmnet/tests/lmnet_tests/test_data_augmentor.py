@@ -21,6 +21,7 @@ import PIL.ImageDraw
 import pytest
 
 from lmnet.datasets.lm_things_on_a_table import LmThingsOnATable
+from lmnet.datasets.dataset_iterator import DatasetIterator
 from lmnet.pre_processor import (
     ResizeWithGtBoxes
 )
@@ -94,8 +95,8 @@ def test_sequence():
     batch_size = 3
     image_size = [256, 512]
     augmentor = Sequence([
-        FlipLeftRight(is_bounding_box=True),
-        FlipTopBottom(is_bounding_box=True),
+        FlipLeftRight(),
+        FlipTopBottom(),
         SSDRandomCrop(),
     ])
 
@@ -103,6 +104,7 @@ def test_sequence():
         batch_size=batch_size, pre_processor=ResizeWithGtBoxes(image_size),
         augmentor=augmentor,
     )
+    dataset = DatasetIterator(dataset)
 
     for _ in range(5):
         images, labels = dataset.feed()
@@ -116,6 +118,7 @@ def test_blur():
         batch_size=batch_size, pre_processor=ResizeWithGtBoxes(image_size),
         augmentor=Blur((0, 1)),
     )
+    dataset = DatasetIterator(dataset)
 
     for _ in range(5):
         images, labels = dataset.feed()
@@ -129,6 +132,7 @@ def test_brightness():
         batch_size=batch_size, pre_processor=ResizeWithGtBoxes(image_size),
         augmentor=Brightness(),
     )
+    dataset = DatasetIterator(dataset)
 
     for _ in range(5):
         images, labels = dataset.feed()
@@ -142,6 +146,7 @@ def test_color():
         batch_size=batch_size, pre_processor=ResizeWithGtBoxes(image_size),
         augmentor=Color((0.0, 2.0)),
     )
+    dataset = DatasetIterator(dataset)
 
     for _ in range(5):
         images, labels = dataset.feed()
@@ -155,6 +160,7 @@ def test_contrast():
         batch_size=batch_size, pre_processor=ResizeWithGtBoxes(image_size),
         augmentor=Contrast((0.0, 2.0)),
     )
+    dataset = DatasetIterator(dataset)
 
     for _ in range(5):
         images, labels = dataset.feed()
@@ -180,8 +186,9 @@ def test_filp_left_right():
     image_size = [256, 512]
     dataset = LmThingsOnATable(
         batch_size=batch_size, pre_processor=ResizeWithGtBoxes(image_size),
-        augmentor=FlipLeftRight(is_bounding_box=True),
+        augmentor=FlipLeftRight(),
     )
+    dataset = DatasetIterator(dataset)
 
     for _ in range(5):
         images, labels = dataset.feed()
@@ -193,8 +200,9 @@ def test_filp_top_bottom():
     image_size = [256, 512]
     dataset = LmThingsOnATable(
         batch_size=batch_size, pre_processor=ResizeWithGtBoxes(image_size),
-        augmentor=FlipTopBottom(is_bounding_box=True),
+        augmentor=FlipTopBottom(),
     )
+    dataset = DatasetIterator(dataset)
 
     for _ in range(5):
         images, labels = dataset.feed()
@@ -208,6 +216,7 @@ def test_hue():
         batch_size=batch_size, pre_processor=ResizeWithGtBoxes(image_size),
         augmentor=Hue((-10, 10)),
     )
+    dataset = DatasetIterator(dataset)
 
     for _ in range(5):
         images, labels = dataset.feed()
@@ -266,6 +275,7 @@ def test_ssd_random_crop():
         batch_size=batch_size, pre_processor=ResizeWithGtBoxes(image_size),
         augmentor=SSDRandomCrop(),
     )
+    dataset = DatasetIterator(dataset)
 
     for _ in range(5):
         images, labels = dataset.feed()

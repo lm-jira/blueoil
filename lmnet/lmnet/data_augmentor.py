@@ -191,7 +191,7 @@ class Crop(data_processor.Processor):
         resize (int | list | tuple): If there are resize param, resize and crop.
     """
 
-    def __init__(self, size=(128, 128), resize=None):
+    def __init__(self, size, resize=None):
 
         if type(size) in [int, float]:
             height = size
@@ -272,12 +272,10 @@ class FlipLeftRight(data_processor.Processor):
 
     Args:
         probability (number): Probability for flipping.
-        is_bounding_box (bool): If is bounding box.
     """
 
-    def __init__(self, probability=0.5, is_bounding_box=False):
+    def __init__(self, probability=0.5):
         self.probability = probability
-        self.is_bounding_box = is_bounding_box
 
     def __call__(self, image, mask=None, gt_boxes=None, **kwargs):
         flg = random.random() > self.probability
@@ -290,7 +288,7 @@ class FlipLeftRight(data_processor.Processor):
                     mask = mask[:, ::-1, :]
                 else:
                     raise RuntimeError('Number of dims in mask should be 2 or 3 but get {}.'.format(np.ndim(mask)))
-            if self.is_bounding_box and gt_boxes is not None:
+            if gt_boxes is not None:
                 gt_boxes = _flip_left_right_boundingbox(image, gt_boxes)
 
         return dict({'image': image, 'mask': mask, 'gt_boxes': gt_boxes}, **kwargs)
@@ -315,12 +313,10 @@ class FlipTopBottom(data_processor.Processor):
 
     Args:
         probability (number): Probability for flipping.
-        is_bounding_box (bool): If is bounding box.
     """
 
-    def __init__(self, probability=0.5, is_bounding_box=False):
+    def __init__(self, probability=0.5):
         self.probability = probability
-        self.is_bounding_box = is_bounding_box
 
     def __call__(self, image, mask=None, gt_boxes=None, **kwargs):
         """
@@ -342,7 +338,7 @@ class FlipTopBottom(data_processor.Processor):
                     mask = mask[::-1, :, :]
                 else:
                     raise RuntimeError('Number of dims in mask should be 2 or 3 but get {}.'.format(np.ndim(mask)))
-            if self.is_bounding_box and gt_boxes is not None:
+            if gt_boxes is not None:
                 gt_boxes = _flip_top_bottom_boundingbox(image, gt_boxes)
 
         return dict({'image': image, 'mask': mask, 'gt_boxes': gt_boxes}, **kwargs)
@@ -396,7 +392,7 @@ def iou(boxes, box):
     Returns:
         iou: shape is [num_boxes]
     """
-    assert boxes.size != 0, "Cannot clculate if ground truth boxes is zero"
+    assert boxes.size != 0, "Cannot calculate if ground truth boxes is zero"
 
     # format boxes (left, top, right, bottom)
     boxes = np.stack([
@@ -431,6 +427,19 @@ def iou(boxes, box):
     union = area + areas - intersection
 
     return intersection / (union + epsilon)
+
+
+# TODO(tokunaga): Move to somewhere, It is generic function for object detection.
+def _fill_dummy_boxes(gt_boxes, num_max_boxes):
+    dummy_gt_box = [0, 0, 0, 0, -1]
+    if len(gt_boxes) == 0:
+        gt_boxes = np.array(dummy_gt_box * num_max_boxes)
+        return gt_boxes.reshape([num_max_boxes, 5])
+    elif len(gt_boxes) < num_max_boxes:
+        diff = num_max_boxes - len(gt_boxes)
+        gt_boxes = np.append(gt_boxes, [dummy_gt_box] * diff, axis=0)
+        return gt_boxes
+    return gt_boxes
 
 
 def _crop_boxes(boxes, crop_rect):
@@ -485,9 +494,7 @@ def _crop_boxes(boxes, crop_rect):
 
 
 class Pad(data_processor.Processor):
-    """Pad
-
-    Add padding to images.
+    """Add padding to images.
 
     Args:
         value (int or tuple): Padding on each border. If a single int is provided this
@@ -735,8 +742,8 @@ class SSDRandomCrop(data_processor.Processor):
         # Crop rectangle minimum ratio corresponding to original image.
         self.min_crop_ratio = min_crop_ratio
 
-    def __call__(self, image, gt_boxes=None, **kwargs):
-        """Crop
+    def __call__(self, image, gt_boxes, **kwargs):
+        """SSDRandomCrop
 
         Args:
             image (np.ndarray): a image. shape is [height, width, channel]
@@ -746,6 +753,7 @@ class SSDRandomCrop(data_processor.Processor):
         """
         boxes = gt_boxes
         height, width, _ = image.shape
+        num_max_boxes = len(gt_boxes)
 
         while True:
             # randomly choose a mode
@@ -813,6 +821,7 @@ class SSDRandomCrop(data_processor.Processor):
                 # take only matching gt boxes
                 masked_boxes = boxes[mask, :]
                 current_boxes = _crop_boxes(masked_boxes, crop_rect)
+                current_boxes = _fill_dummy_boxes(current_boxes, num_max_boxes)
 
                 return dict({'image': current_image, 'gt_boxes': current_boxes}, **kwargs)
 
