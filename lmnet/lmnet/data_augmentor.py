@@ -864,7 +864,7 @@ class Rotate(data_processor.Processor):
             image_size = np.array(image).shape
             center_x = image_size[0] / 2.0
             center_y = image_size[1] / 2.0
-            #gt_boxes = self._get_rotated_boxes(gt_boxes, center_x, center_y, angle)
+            gt_boxes = self._get_rotated_boxes(gt_boxes, center_x, center_y, angle)
 
         return dict({'image': img_rot, 'mask': mask, 'gt_boxes': gt_boxes}, **kwargs)
 

@@ -173,7 +173,12 @@ def start_training(config):
         #         per_process_gpu_memory_fraction=0.1
         #     )
         # )
-        session_config = tf.ConfigProto()  # tf.ConfigProto(log_device_placement=True)
+        session_config = tf.ConfigProto(
+            gpu_options=tf.GPUOptions(
+                allow_growth=True,
+            )
+        )
+    # tf.ConfigProto(log_device_placement=True)
     # TODO(wakisaka): XLA JIT
     # session_config.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
